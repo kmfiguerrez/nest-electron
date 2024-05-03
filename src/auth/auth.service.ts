@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from "@nestjs/common";
+import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 
 import { LoginDTO, RegisterDTO } from "./dto";
 
@@ -13,16 +13,24 @@ import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 export class AuthService {
   constructor(private prisma: PrismaService) {}
 
-  async register(dto: RegisterDTO) {
+  async register(dto: RegisterDTO) {    
     try {
+      // Verify the employee first.
+      const existingEmployee = await this.prisma.employee.findUnique({
+        where: {
+          id: dto.employeeId
+        }        
+      })
+      if (!existingEmployee) throw new Error("Employee does not exists")
+
       // Generate the password hash.
       const hashPassword = await argon2.hash(dto.password)
       // Save the new user in the db.
       const user = await this.prisma.user.create({
         data: {
           email: dto.email,
-          name: dto.name === "" ? null : dto.name,
-          password: hashPassword
+          password: hashPassword,
+          employeeId: dto.employeeId
         }
       })
       // Do not include the hashed password.
@@ -36,6 +44,10 @@ export class AuthService {
       if (error instanceof PrismaClientKnownRequestError) {
         const existingEmail = error.message.includes("Unique constraint failed on the fields: (`email`)")
         if (existingEmail) throw new ForbiddenException("Email already exists")
+      }
+      else {
+        // Otherwise error is Error.
+        throw new NotFoundException("Invalid employee ID")
       }
     }    
   }
