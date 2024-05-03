@@ -9,7 +9,7 @@ import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 
 
-@Injectable({})
+@Injectable()
 export class AuthService {
   constructor(private prisma: PrismaService) {}
 
@@ -35,7 +35,6 @@ export class AuthService {
       // console.log(error)
       if (error instanceof PrismaClientKnownRequestError) {
         const existingEmail = error.message.includes("Unique constraint failed on the fields: (`email`)")
-        console.log(existingEmail)
         if (existingEmail) throw new ForbiddenException("Email already exists")
       }
     }    
@@ -57,6 +56,10 @@ export class AuthService {
 
     // Do not include the hashed password.
     delete existingUser.password
+    delete existingUser.createdAt
+    delete existingUser.updatedAt
+    delete existingUser.emailVerified
+    delete existingUser.isTwoFactorEnabled
 
     // return the user
     return existingUser
