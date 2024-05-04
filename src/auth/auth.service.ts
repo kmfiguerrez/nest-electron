@@ -6,6 +6,7 @@ import * as argon2 from "argon2";
 
 import { PrismaService } from "src/prisma/prisma.service";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { UserEntity } from "./entities/user.entity";
 
 
 
@@ -21,7 +22,7 @@ export class AuthService {
           id: dto.employeeId
         }        
       })
-      if (!existingEmployee) throw new Error("Employee does not exists")
+      if (!existingEmployee) throw new NotFoundException("Employee does not exists")
 
       // Generate the password hash.
       const hashPassword = await argon2.hash(dto.password)
@@ -45,12 +46,14 @@ export class AuthService {
         const existingEmail = error.message.includes("Unique constraint failed on the fields: (`email`)")
         if (existingEmail) throw new ForbiddenException("Email already exists")
       }
-      else {
-        // Otherwise error is Error.
+
+      if (error instanceof NotFoundException) {
         throw new NotFoundException("Invalid employee ID")
       }
     }    
   }
+
+
 
 
   async login(dto: LoginDTO) {
@@ -59,21 +62,34 @@ export class AuthService {
       where: {
         email: dto.email
       }
+
     })
     if (!existingUser) throw new ForbiddenException("Invalid credentials")
 
     // Compare password.
     const passwordMatch = await argon2.verify(existingUser.password, dto.password)
     if (!passwordMatch) throw new ForbiddenException("Invalid credentials")
-
-    // Do not include the hashed password.
-    delete existingUser.password
-    delete existingUser.createdAt
-    delete existingUser.updatedAt
-    delete existingUser.emailVerified
-    delete existingUser.isTwoFactorEnabled
+    
+    // Get the employee info.
+    const existingEmployee = await this.prisma.employee.findUnique({
+      where: {
+        id: existingUser.employeeId
+      },
+      select: {
+        designation: true,
+        department: true,
+        user: {
+          select: {
+            id: true,
+            email: true,
+            role: true,
+            image: true
+          }
+        }
+      }
+    })
 
     // return the user
-    return existingUser
+    return new UserEntity(existingEmployee)
   }
 }
