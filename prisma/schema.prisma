@@ -88,7 +88,7 @@ enum Gender {
 model Employee {
   id          String   @id @map("employee_id")
   birthDate   DateTime @map("birth_date") @db.Date
-  firstname   String   @map("first_name") @db.VarChar(30)
+  firstName   String   @map("first_name") @db.VarChar(30)
   lastName    String   @map("last_name") @db.VarChar(16)
   gender      Gender
   designation String   @db.VarChar(15)

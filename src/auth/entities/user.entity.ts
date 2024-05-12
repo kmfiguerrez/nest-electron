@@ -12,10 +12,20 @@ type TUser = {
 export class UserEntity {
   designation: string
   department: string
+  
+  @Exclude()
+  firstName: string
+
+  @Exclude()
+  lastName: string
 
   @Exclude()
   user: Array<TUser>
 
+  @Expose()
+  get fullName(): string {
+    return `${this.firstName} ${this.lastName}`
+  }
 
   @Expose()
   get id(): string {

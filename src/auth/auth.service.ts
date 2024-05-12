@@ -57,39 +57,48 @@ export class AuthService {
 
 
   async login(dto: LoginDTO) {
-    // Find user by email.
-    const existingUser = await this.prisma.user.findUnique({
-      where: {
-        email: dto.email
-      }
+    try {    
+      // Find user by email.
+      const existingUser = await this.prisma.user.findUnique({
+        where: {
+          email: dto.email
+        }
 
-    })
-    if (!existingUser) throw new ForbiddenException("Invalid credentials")
+      })
+      if (!existingUser) throw new ForbiddenException("Invalid credentials")
 
-    // Compare password.
-    const passwordMatch = await argon2.verify(existingUser.password, dto.password)
-    if (!passwordMatch) throw new ForbiddenException("Invalid credentials")
-    
-    // Get the employee info.
-    const existingEmployee = await this.prisma.employee.findUnique({
-      where: {
-        id: existingUser.employeeId
-      },
-      select: {
-        designation: true,
-        department: true,
-        user: {
-          select: {
-            id: true,
-            email: true,
-            role: true,
-            image: true
+      // Compare password.
+      const passwordMatch = await argon2.verify(existingUser.password, dto.password)
+      if (!passwordMatch) throw new ForbiddenException("Invalid credentials")
+      
+      // Get the employee info.
+      const existingEmployee = await this.prisma.employee.findUnique({
+        where: {
+          id: existingUser.employeeId
+        },
+        select: {
+          designation: true,
+          department: true,
+          firstName: true,
+          lastName: true,
+          user: {
+            select: {
+              id: true,
+              email: true,
+              role: true,
+              image: true
+            }
           }
         }
+      })
+      
+      // return the user
+      return new UserEntity(existingEmployee)
+    } 
+    catch (error: unknown) {
+      if (error instanceof ForbiddenException) {
+        throw new ForbiddenException("Invalid credentials")
       }
-    })
-
-    // return the user
-    return new UserEntity(existingEmployee)
+    }
   }
 }
