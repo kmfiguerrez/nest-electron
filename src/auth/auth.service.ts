@@ -8,11 +8,18 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { UserEntity } from "./entities/user.entity";
 
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from "@nestjs/config";
+
 
 
 @Injectable()
 export class AuthService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private jwtService: JwtService,
+    private config: ConfigService,
+  ) {}
 
   async register(dto: RegisterDTO) {    
     try {
@@ -92,8 +99,10 @@ export class AuthService {
         }
       })
       
-      // return the user
-      return new UserEntity(existingEmployee)
+      // return the user with jwt token.
+      const payload = {sub: existingUser.id, email: existingUser.email}
+      const accessToken = await this.jwtService.signAsync(payload, {expiresIn: "1d", secret: this.config.get("JWT_SECRET")})
+      return new UserEntity({...existingEmployee, accessToken})
     } 
     catch (error: unknown) {
       if (error instanceof ForbiddenException) {

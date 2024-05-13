@@ -12,6 +12,7 @@ type TUser = {
 export class UserEntity {
   designation: string
   department: string
+  accessToken: string
   
   @Exclude()
   firstName: string
@@ -23,7 +24,7 @@ export class UserEntity {
   user: Array<TUser>
 
   @Expose()
-  get fullName(): string {
+  get name(): string {
     return `${this.firstName} ${this.lastName}`
   }
 
@@ -46,6 +47,8 @@ export class UserEntity {
   get image(): string {
     return `${this.user[0].image}`
   }
+
+
 
   constructor(partial: Partial<UserEntity>) {
     Object.assign(this, partial);

@@ -2,9 +2,14 @@ import { Body, ClassSerializerInterceptor, Controller, Post, UseInterceptors } f
 import { AuthService } from "./auth.service";
 import { LoginDTO, RegisterDTO } from "./dto";
 
-@Controller('api/auth')
+
+
+@Controller('auth')
 export class AuthController{
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+
+  ) {}
 
   @Post('register')
   register(@Body() dto: RegisterDTO) {
@@ -15,7 +20,8 @@ export class AuthController{
   // See serialization in nestjs docs.
   @UseInterceptors(ClassSerializerInterceptor)
   @Post('login')
-  signin(@Body() dto: LoginDTO) {
+  async signin(@Body() dto: LoginDTO) {
     return this.authService.login(dto)
+
   }  
 }
