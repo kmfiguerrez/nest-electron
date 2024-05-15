@@ -1,15 +1,15 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
-import { Request } from "express";
+import { Controller, Get, UseGuards } from '@nestjs/common';
+import { GetUser } from 'src/auth/decorator';
 import { JwtGuard } from 'src/auth/guard';
 
 
+@UseGuards(JwtGuard)
 @Controller('employees')
 export class EmployeesController {
-  @UseGuards(JwtGuard)
   @Get()
-  getEmployees(@Req() req: Request) {
+  getEmployees(@GetUser() user: { sub: string, email: string }) {
     console.log("yo")
-    console.log("fuck", req.user)
+    console.log("fuck", user)
     return {employees: "Employees"}
   }
 }
