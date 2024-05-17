@@ -11,13 +11,13 @@ import { PrismaModule } from './prisma/prisma.module';
 import { loggerMiddleware } from './common/middleware/logger.middleware';
 
 import { ConfigModule } from "@nestjs/config";
-import { EmployeesController } from './employees/employees.controller';
 import { EmployeesModule } from './employees/employees.module';
+
 
 
 @Module({
   imports: [AuthModule, PrismaModule, ConfigModule.forRoot({isGlobal: true}), EmployeesModule],
-  controllers: [AppController, EmployeesController],
+  controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule implements NestModule{

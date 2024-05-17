@@ -8,7 +8,6 @@ import { LoginDTO, RegisterDTO } from "./dto";
 export class AuthController{
   constructor(
     private authService: AuthService,
-
   ) {}
 
   @Post('register')

@@ -1,15 +1,38 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
-import { GetUser } from 'src/auth/decorator';
-import { JwtGuard } from 'src/auth/guard';
+import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { EmployeesService } from './employees.service';
+import { CreateEmployeeDto } from './dto/create-employee.dto';
+import { UpdateEmployeeDto } from './dto/update-employee.dto';
 
-
-@UseGuards(JwtGuard)
 @Controller('employees')
 export class EmployeesController {
+  constructor(private readonly employeesService: EmployeesService) {}
+
+  @Post()
+  create(@Body() createEmployeeDto: CreateEmployeeDto) {
+    // console.log("From controller")
+    // console.log(createEmployeeDto)
+    return this.employeesService.create(createEmployeeDto);
+    // return {data: "success"}
+  }
+
   @Get()
-  getEmployees(@GetUser() user: { sub: string, email: string }) {
-    console.log("yo")
-    console.log("fuck", user)
-    return {employees: "Employees"}
+  findAll() {
+    return this.employeesService.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.employeesService.findOne(+id);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateEmployeeDto: UpdateEmployeeDto) {
+    return this.employeesService.update(+id, updateEmployeeDto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    console.log(id)
+    return this.employeesService.remove(id);
   }
 }

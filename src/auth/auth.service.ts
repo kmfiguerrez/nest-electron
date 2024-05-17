@@ -45,7 +45,7 @@ export class AuthService {
       delete user.password
 
       // Return the save user.
-      return user
+      return {data: "User created"}
     } 
     catch (error: unknown) {
       // console.log(error)
@@ -72,7 +72,7 @@ export class AuthService {
         }
 
       })
-      if (!existingUser) throw new ForbiddenException("Invalid credentials")
+      if (!existingUser) throw new NotFoundException("Invalid credentials")
 
       // Compare password.
       const passwordMatch = await argon2.verify(existingUser.password, dto.password)
@@ -100,14 +100,17 @@ export class AuthService {
       })
       
       // return the user with jwt token.
-      const payload = {sub: existingUser.id, email: existingUser.email}
-      const accessToken = await this.jwtService.signAsync(payload, {expiresIn: "1d", secret: this.config.get("JWT_SECRET")})
+      const accessToken = await this.generateToken({id: existingEmployee.user[0].id, email: existingEmployee.user[0].email})
       return new UserEntity({...existingEmployee, accessToken})
     } 
     catch (error: unknown) {
-      if (error instanceof ForbiddenException) {
-        throw new ForbiddenException("Invalid credentials")
-      }
+      throw error
     }
+  }
+
+
+  async generateToken(user: any) {
+    const payload = { sub: user.id, email: user.email}
+    return this.jwtService.signAsync(payload, {expiresIn: "1d", secret: this.config.get("JWT_SECRET")})
   }
 }
