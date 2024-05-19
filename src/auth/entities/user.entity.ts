@@ -2,7 +2,7 @@ import { Exclude, Expose } from "class-transformer"
 import { UserRole } from "@prisma/client"
 
 type TUser = {
-  id: string
+  userId: string
   email: string
   role: UserRole
   image: string
@@ -29,8 +29,8 @@ export class UserEntity {
   }
 
   @Expose()
-  get id(): string {
-    return `${this.user[0].id}`
+  get userId(): string {
+    return `${this.user[0].userId}`
   }
 
   @Expose()

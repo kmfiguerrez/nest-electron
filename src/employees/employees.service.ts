@@ -1,42 +1,43 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class EmployeesService {
   constructor(private prismaService: PrismaService) {}
 
   async create(createEmployeeDto: CreateEmployeeDto) {
-
-    const newEmployee = await this.prismaService.employee.create({
-      data: {
-        id: createEmployeeDto.employeeId,
-        firstName: createEmployeeDto.firstName,
-        lastName: createEmployeeDto.lastName,
-        email: createEmployeeDto.email,
-        gender: createEmployeeDto.gender,
-        active: createEmployeeDto.active,
-        department: createEmployeeDto.department,
-        designation: createEmployeeDto.designation,
-        birthDate: new Date(createEmployeeDto.birthDate),
-        hireDate: new Date(createEmployeeDto.hireDate) 
+    try {
+      const newEmployee = await this.prismaService.employee.create({
+        data: {
+          employeeId: createEmployeeDto.
+        }
+      })
+      console.log(newEmployee)
+      return newEmployee;
+    } 
+    catch (error: unknown) {
+      console.log(error)
+      if (error instanceof PrismaClientKnownRequestError) {
+        const fields = error.meta.target as Array<string>
+        if (fields.includes("employee_id")) throw new ForbiddenException("Employee ID already in use")
+        if (fields.includes("email")) throw new ForbiddenException("Email already in use")
       }
-    })
-    return newEmployee;
+    }    
   }
 
 
   findAll() {
-
     return this.prismaService.employee.findMany({
       select: {
-        id: true,
+        employeeId: true,
         firstName: true,
         lastName: true,
         email: true,
         gender: true,
-        active: true,
+        statusName: true,
         birthDate: true,
         designation: true,
         department: true,
@@ -45,22 +46,47 @@ export class EmployeesService {
     })
   }
 
+
+
   findOne(id: number) {
     return `This action returns a #${id} employee`;
   }
 
-  update(id: number, updateEmployeeDto: UpdateEmployeeDto) {
-    return `This action updates a #${id} employee`;
+
+  async update(id: string, updateEmployeeDto: UpdateEmployeeDto) {
+    try {
+      const modifiedEmployee = await this.prismaService.employee.update({
+        where: {
+          employeeId: updateEmployeeDto.employeeId
+        },
+        data: {
+          ...updateEmployeeDto,
+          birthDate: new Date(updateEmployeeDto.birthDate),
+          hireDate: new Date(updateEmployeeDto.hireDate)
+        }
+      })
+  
+      return modifiedEmployee;      
+    } 
+    catch (error: unknown) {
+      console.log(error)
+      if (error instanceof PrismaClientKnownRequestError) {
+        const fields = error.meta.target as Array<string>
+        if (fields.includes("employee_id")) throw new ForbiddenException("Employee ID already in use")
+        if (fields.includes("email")) throw new ForbiddenException("Email already in use")
+      }
+    }
+
   }
+
 
   async remove(id: string) {
     const removedEmployee = await this.prismaService.employee.delete({
       where: {
-        id: id
+        employeeId: id
       }
     })
 
-    console.log(removedEmployee)
     return removedEmployee
   }
 }

@@ -13,9 +13,9 @@ CREATE TABLE "users" (
     "password" TEXT,
     "role" "UserRole" NOT NULL DEFAULT 'USER',
     "image" TEXT,
+    "isTwoFactorEnabled" BOOLEAN NOT NULL DEFAULT false,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
-    "isTwoFactorEnabled" BOOLEAN NOT NULL DEFAULT false,
     "employee_id" TEXT NOT NULL,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("user_id")
@@ -63,17 +63,45 @@ CREATE TABLE "employees" (
     "employee_id" TEXT NOT NULL,
     "birth_date" DATE NOT NULL,
     "first_name" VARCHAR(30) NOT NULL,
-    "last_name" VARCHAR(16) NOT NULL,
+    "last_name" VARCHAR(30) NOT NULL,
     "email" VARCHAR(30) NOT NULL,
     "gender" "Gender" NOT NULL,
-    "designation" VARCHAR(15) NOT NULL,
-    "department" VARCHAR(15) NOT NULL,
+    "status" VARCHAR(15),
+    "department" VARCHAR(30),
+    "title" VARCHAR(30),
     "hire_date" DATE NOT NULL,
-    "active" BOOLEAN NOT NULL,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
 
     CONSTRAINT "employees_pkey" PRIMARY KEY ("employee_id")
+);
+
+-- CreateTable
+CREATE TABLE "status" (
+    "status_id" SERIAL NOT NULL,
+    "name" VARCHAR(15) NOT NULL,
+
+    CONSTRAINT "status_pkey" PRIMARY KEY ("status_id")
+);
+
+-- CreateTable
+CREATE TABLE "departments" (
+    "department_id" SERIAL NOT NULL,
+    "name" VARCHAR(30) NOT NULL,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT "departments_pkey" PRIMARY KEY ("department_id")
+);
+
+-- CreateTable
+CREATE TABLE "titles" (
+    "title_id" SERIAL NOT NULL,
+    "name" VARCHAR(20) NOT NULL,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT "titles_pkey" PRIMARY KEY ("title_id")
 );
 
 -- CreateIndex
@@ -91,6 +119,18 @@ CREATE UNIQUE INDEX "two_factor_token_email_token_key" ON "two_factor_token"("em
 -- CreateIndex
 CREATE UNIQUE INDEX "two_factor_confirmation_userId_key" ON "two_factor_confirmation"("userId");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "employees_email_key" ON "employees"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "status_name_key" ON "status"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "departments_name_key" ON "departments"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "titles_name_key" ON "titles"("name");
+
 -- AddForeignKey
 ALTER TABLE "users" ADD CONSTRAINT "users_employee_id_fkey" FOREIGN KEY ("employee_id") REFERENCES "employees"("employee_id") ON DELETE CASCADE ON UPDATE NO ACTION;
 
@@ -99,3 +139,12 @@ ALTER TABLE "accounts" ADD CONSTRAINT "accounts_userId_fkey" FOREIGN KEY ("userI
 
 -- AddForeignKey
 ALTER TABLE "two_factor_confirmation" ADD CONSTRAINT "two_factor_confirmation_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("user_id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "employees" ADD CONSTRAINT "employees_department_fkey" FOREIGN KEY ("department") REFERENCES "departments"("name") ON DELETE SET NULL ON UPDATE SET NULL;
+
+-- AddForeignKey
+ALTER TABLE "employees" ADD CONSTRAINT "employees_title_fkey" FOREIGN KEY ("title") REFERENCES "titles"("name") ON DELETE SET NULL ON UPDATE SET NULL;
+
+-- AddForeignKey
+ALTER TABLE "employees" ADD CONSTRAINT "employees_status_fkey" FOREIGN KEY ("status") REFERENCES "status"("name") ON DELETE SET NULL ON UPDATE SET NULL;

@@ -26,7 +26,7 @@ export class AuthService {
       // Verify the employee first.
       const existingEmployee = await this.prisma.employee.findUnique({
         where: {
-          id: dto.employeeId
+          employeeId: dto.employeeId
         }        
       })
       if (!existingEmployee) throw new NotFoundException("Employee does not exists")
@@ -51,11 +51,11 @@ export class AuthService {
       // console.log(error)
       if (error instanceof PrismaClientKnownRequestError) {
         const existingEmail = error.message.includes("Unique constraint failed on the fields: (`email`)")
-        if (existingEmail) throw new ForbiddenException("Email already exists")
+        if (existingEmail) throw new ForbiddenException("Email already in use")
       }
 
       if (error instanceof NotFoundException) {
-        throw new NotFoundException("Invalid employee ID")
+        throw new NotFoundException("Employee ID does not exists")
       }
     }    
   }
@@ -81,7 +81,7 @@ export class AuthService {
       // Get the employee info.
       const existingEmployee = await this.prisma.employee.findUnique({
         where: {
-          id: existingUser.employeeId
+          employeeId: existingUser.employeeId
         },
         select: {
           designation: true,
@@ -90,7 +90,7 @@ export class AuthService {
           lastName: true,
           user: {
             select: {
-              id: true,
+              userId: true,
               email: true,
               role: true,
               image: true
@@ -100,7 +100,7 @@ export class AuthService {
       })
       
       // return the user with jwt token.
-      const accessToken = await this.generateToken({id: existingEmployee.user[0].id, email: existingEmployee.user[0].email})
+      const accessToken = await this.generateToken({id: existingEmployee.user[0].userId, email: existingEmployee.user[0].email})
       return new UserEntity({...existingEmployee, accessToken})
     } 
     catch (error: unknown) {
